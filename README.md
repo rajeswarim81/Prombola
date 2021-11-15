@@ -1,2 +1,2 @@
-# ECE225A_Project
-Project for ECE 225A
+# Prombola
+A Probabilistic war of Tambola
