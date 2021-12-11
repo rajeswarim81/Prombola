@@ -29,4 +29,4 @@ def getTicket():
 
     return tkt
 
-print(getTicket())
+t = getTicket();
