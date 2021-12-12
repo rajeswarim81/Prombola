@@ -2,21 +2,19 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-calling_number_sequence = random.sample(range(1, 91), 90)
 # Priority orders
-EarlyFive = 6  # The ticket with first five number dabbed
-TopLine = 5  # The ticket with all the numbers of the top row dabbed fastest.
-MiddleLine = 4  # The ticket with all the numbers of the middle row dabbed fastest.
+FullHouse = 0  # The ticket with all the 15 numbers marked first.
+TopLine = 1  # The ticket with all the numbers of the top row dabbed fastest.
+MiddleLine = 2  # The ticket with all the numbers of the middle row dabbed fastest.
 BottomLine = 3  # The ticket with the numbers of the bottom row dabbed fasted.
-FourCorners = 2  # The ticket with all four corners marked first i.e. 1st and last numbers of top and bottom rows.
-FullHouse = 1  # The ticket with all the 15 numbers marked first.
-gameStateLen = 7
+FourCorners = 4 # The ticket with all four corners marked first i.e. 1st and last numbers of top and bottom rows.
+EarlyFive = 5 # The ticket with first five number dabbed
+gameStateLen = 6
 # print(calling_number_sequence)
-def call_game(calling_number_sequence):
+def call_game(calling_number_sequence, N=10):
     # GAME PARAMETERS
     mu, sigma = 50, 35  # mean and standard deviation
     n = 90  # range of numbers that will be called
-    N = 1  # number of player
     C = 15  # number of cards the caller calls
     R = 10  # number of cards with players
     rowsInTicket = 3  # number of rows in the players' tickets
@@ -77,38 +75,38 @@ def call_game(calling_number_sequence):
 
     gameState = {'InGame': '0', 'FullHouse': '1', 'FourCorners': '2', 'BottomLine': '3', 'MiddleLine': '4', 'TopLine': '5',
                  'EarlyFive': '6'}
-    playerStates = [[0] * gameStateLen for _ in range(N)]
+    playerStates = np.zeros((N,6))
     strategies_winning_turn = [0] * gameStateLen
 
 
     def full_house(allPlayerTickets):
         for i in range(N):
             if np.sum(allPlayerTickets[i]) == 0:
-                playerStates[i][FullHouse] = 1
+                playerStates[i,FullHouse] = 1
 
 
     def early_five(allPlayerTickets):
         for i in range(N):
             if np.count_nonzero(allPlayerTickets[i] == 0) == 17:
-                playerStates[i][EarlyFive] = 1
+                playerStates[i,EarlyFive] = 1
 
 
     def top_line(allPlayerTickets):
         for i in range(N):
             if np.sum(allPlayerTickets[i][0]) == 0:
-                playerStates[i][TopLine] = 1
+                playerStates[i,TopLine] = 1
 
 
     def middle_line(allPlayerTickets):
         for i in range(N):
             if np.sum(allPlayerTickets[i][1]) == 0:
-                playerStates[i][MiddleLine] = 1
+                playerStates[i,MiddleLine] = 1
 
 
     def bottom_line(allPlayerTickets):
         for i in range(N):
             if np.sum(allPlayerTickets[i][2]) == 0:
-                playerStates[i][BottomLine] = 1
+                playerStates[i,BottomLine] = 1
 
 
     def four_corners(allPlayerTickets):
@@ -117,7 +115,7 @@ def call_game(calling_number_sequence):
                     + allPlayerTickets[i][0][columnsInTicket - 1]
                     + allPlayerTickets[i][rowsInTicket - 1][0]
                     + allPlayerTickets[i][rowsInTicket - 1][columnsInTicket - 1] == 0):
-                playerStates[i][FourCorners] = 1
+                playerStates[i,FourCorners] = 1
 
 
     # TODOOOOOOOOO, fix this shitty code
@@ -140,32 +138,32 @@ def call_game(calling_number_sequence):
             if strategies_winning_turn[FullHouse] == 0:
                 full_house(allPlayerTickets)
                 # check if full house is achieved
-                if playerStates[pn][FullHouse] == 1:
+                if np.any(playerStates[:, FullHouse] == 1):
                     strategies_winning_turn[FullHouse] = turn
-
-            if strategies_winning_turn[FourCorners] == 0:
-                four_corners(allPlayerTickets)
-                if playerStates[pn][FourCorners] == 1:
-                    strategies_winning_turn[FourCorners] = turn
 
             if strategies_winning_turn[BottomLine] == 0:
                 bottom_line(allPlayerTickets)
-                if playerStates[pn][BottomLine] == 1:
+                if np.any(playerStates[:, BottomLine] == 1):
                     strategies_winning_turn[BottomLine] = turn
 
             if strategies_winning_turn[MiddleLine] == 0:
                 middle_line(allPlayerTickets)
-                if playerStates[pn][MiddleLine] == 1:
+                if np.any(playerStates[:, MiddleLine] == 1):
                     strategies_winning_turn[MiddleLine] = turn
 
             if strategies_winning_turn[TopLine] == 0:
                 top_line(allPlayerTickets)
-                if playerStates[pn][TopLine] == 1:
+                if np.any(playerStates[:, TopLine] == 1):
                     strategies_winning_turn[TopLine] = turn
+
+            if strategies_winning_turn[FourCorners] == 0:
+                four_corners(allPlayerTickets)
+                if np.any(playerStates[:, FourCorners] == 1):
+                    strategies_winning_turn[FourCorners] = turn
 
             if strategies_winning_turn[EarlyFive] == 0:
                 early_five(allPlayerTickets)
-                if playerStates[pn][EarlyFive] == 1:
+                if np.any(playerStates[:, EarlyFive] == 1):
                     strategies_winning_turn[EarlyFive] = turn
 
             if set(playerStates[pn])=={1}:
@@ -175,16 +173,26 @@ def call_game(calling_number_sequence):
     return strategies_winning_turn
 
 
-winningTurnDistribution = np.zeros((6, 90))  # six winning strategies and 90 turns
+def run_sumilations(iterations, players):
+    winningTurnDistribution = np.zeros((6, 90)) #six winning strategies and 90 turns
+    iters = iterations #simulations = 10^5
+    for i in range(iters):
+        calling_number_sequence = random.sample(range(1, 91), 90)
+        strategies_winning_turn = call_game(calling_number_sequence,players)
+        for each in range(len(strategies_winning_turn)):
+            winningTurnDistribution[each, strategies_winning_turn[each]] +=1
 
-
-for i in range(100):
-    strategies_winning_turn = call_game(calling_number_sequence)
-
-    for each in range(1, len(strategies_winning_turn)):
-        winningTurnDistribution[each - 1, strategies_winning_turn[each]] += 1
-
+    expectation = []
     for each in range(6):
-        winningTurnDistribution[each] = winningTurnDistribution[each] / 90
+        #avg.append(np.average(winningTurnDistribution[each]))
+        winningTurnDistribution[each] = winningTurnDistribution[each]/iters
+        expectation.append(np.average((np.arange(1,91)), weights=winningTurnDistribution[each]))
 
-print(winningTurnDistribution)
+    return expectation
+
+winning_expectation = np.zeros((6,100))
+for players in range(2,100,10):
+   expect = run_sumilations(100,players)
+   for i in range(len(expect)):
+        winning_expectation[i,players] = expect[i]
+print(winning_expectation)
