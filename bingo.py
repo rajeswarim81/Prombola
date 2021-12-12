@@ -30,3 +30,5 @@ def getTicket():
     return tkt
 
 t = getTicket();
+
+print([5,5,5,5,8]//4)

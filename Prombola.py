@@ -175,26 +175,16 @@ def call_game(calling_number_sequence):
     return strategies_winning_turn
 
 
+winningTurnDistribution = np.zeros((6, 90))  # six winning strategies and 90 turns
 
-fullHouseEx = [0] * 90
-earlyFiveEx = [0] * 90
-topLineEx = [0] * 90
-middleLineEx = [0] * 90
-bottomLineEx = [0] * 90
-fourCornersEx = [0] * 90
-for i in range(1000):
+
+for i in range(100):
     strategies_winning_turn = call_game(calling_number_sequence)
-    fullHouseEx[strategies_winning_turn[FullHouse]] += 1
-    earlyFiveEx[strategies_winning_turn[EarlyFive]] += 1
-    topLineEx[strategies_winning_turn[TopLine]] += 1
-    middleLineEx[strategies_winning_turn[MiddleLine]] += 1
-    bottomLineEx[strategies_winning_turn[BottomLine]] += 1
-    fourCornersEx[strategies_winning_turn[FourCorners]] += 1
 
-print(fullHouseEx)
-print(earlyFiveEx)
-print(topLineEx)
-print(middleLineEx)
-print(bottomLineEx)
-print(fourCornersEx)
-#plt.hist(fullHouseEx, bins = 90)
+    for each in range(1, len(strategies_winning_turn)):
+        winningTurnDistribution[each - 1, strategies_winning_turn[each]] += 1
+
+    for each in range(6):
+        winningTurnDistribution[each] = winningTurnDistribution[each] / 90
+
+print(winningTurnDistribution)
